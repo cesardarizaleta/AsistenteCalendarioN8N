@@ -1,0 +1,528 @@
+{
+  "name": "asistonto",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "242a0891-6b63-45ca-8143-ef9689213b11",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "7ae776f5-b382-4cb9-b302-8b3c47bb293a",
+      "name": "Webhook",
+      "webhookId": "242a0891-6b63-45ca-8143-ef9689213b11"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "1af7ecfb-836c-463f-8342-66923c270efb",
+              "leftValue": "={{ $json.message_type }}",
+              "rightValue": "conversation",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        416,
+        0
+      ],
+      "id": "4f4277a3-59ca-449e-80a9-c56c3f8e178f",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "voice_message",
+        "options": {
+          "mimeType": "audio/ogg"
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        656,
+        96
+      ],
+      "id": "0830723d-08ed-41df-aad9-02b68936c90b",
+      "name": "Convert to File"
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.0-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.0-flash"
+        },
+        "inputType": "binary",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        864,
+        96
+      ],
+      "id": "d28a901d-bad3-49e1-b61a-66befb25aae4",
+      "name": "Transcribe a recording",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "lhYe5RmtNmGJSu8T",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "03e99cca-1f3d-48e6-946b-c13f1fb2f514",
+              "name": "sender",
+              "value": "={{ $json.body.data.key.remoteJid }}",
+              "type": "string"
+            },
+            {
+              "id": "57547970-375e-4804-8216-6527f1604315",
+              "name": "message_type",
+              "value": "={{ $json.body.data.messageType }}",
+              "type": "string"
+            },
+            {
+              "id": "2067d9e3-0da2-45e1-80ea-c0ba4c2f4719",
+              "name": "voice_message",
+              "value": "={{ $json.body.data.message.base64 }}",
+              "type": "string"
+            },
+            {
+              "id": "db161818-934b-4cb5-8cb9-04d635c51b74",
+              "name": "text_message",
+              "value": "={{ $json.body.data.message.conversation }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        208,
+        0
+      ],
+      "id": "6d8d1d1d-02a5-4e24-927c-e45c75af0b6e",
+      "name": "extraccion de mensaje"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d99f341d-c216-412a-ab3a-9fe31e0ca37a",
+              "name": "final_message",
+              "value": "={{ $json.text_message }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        848,
+        -144
+      ],
+      "id": "6bd98ab8-2628-4a5e-b7d8-8f31e39b931c",
+      "name": "final_message_text"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "efc3bf44-8c59-46e9-a533-abe2b1baaf68",
+              "name": "final_message",
+              "value": "={{ $json.content.parts[0].text }}",
+              "type": "string"
+            },
+            {
+              "id": "28312f5c-0f3f-4c2d-92f1-05c0ed2e4c7b",
+              "name": "sessionId",
+              "value": "={{ $('Webhook').item.json.body.data.key.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1088,
+        96
+      ],
+      "id": "8683d7cf-f940-48c3-b96c-6f52e2ec4c91",
+      "name": "final_message_voice"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        1360,
+        -16
+      ],
+      "id": "c091402d-45d2-431c-ac16-88ab3942e381",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.0-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1200,
+        240
+      ],
+      "id": "a8477dc0-7c1c-4f6f-98d0-f72327e1d3fc",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "lhYe5RmtNmGJSu8T",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        1328,
+        240
+      ],
+      "id": "3b04ec54-ada7-4a16-b7c1-16bfd98bbc2d",
+      "name": "Postgres Chat Memory",
+      "credentials": {
+        "postgres": {
+          "id": "uSXO2lTXWMmUD5c1",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Usa essta herramienta cuando el usuario quiera crear una cita",
+        "calendar": {
+          "__rl": true,
+          "value": "cesarluis30902@gmail.com",
+          "mode": "list",
+          "cachedResultName": "cesarluis30902@gmail.com"
+        },
+        "start": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Start', ``, 'string') }}",
+        "end": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('End', ``, 'string') }}",
+        "additionalFields": {
+          "description": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Description', ``, 'string') }}",
+          "summary": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Summary', ``, 'string') }}"
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        1520,
+        400
+      ],
+      "id": "bff53b63-447a-41a3-927e-8f7dab7b6ead",
+      "name": "agendar_cita",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "DV7phAFMcYtvhaXI",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Usa esta herramiento cuando el ususario quiera mover la cita a otro dia o otra hora",
+        "operation": "update",
+        "calendar": {
+          "__rl": true,
+          "value": "cesarluis30902@gmail.com",
+          "mode": "list",
+          "cachedResultName": "cesarluis30902@gmail.com"
+        },
+        "eventId": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Event_ID', ``, 'string') }}",
+        "updateFields": {}
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        1408,
+        384
+      ],
+      "id": "e4333c4d-142b-41f3-bff5-1a512c19fce9",
+      "name": "reprogramar_cita",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "DV7phAFMcYtvhaXI",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Usa este herramienta si el usuario quiere eliminar una cita existente",
+        "operation": "delete",
+        "calendar": {
+          "__rl": true,
+          "value": "cesarluis30902@gmail.com",
+          "mode": "list",
+          "cachedResultName": "cesarluis30902@gmail.com"
+        },
+        "eventId": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Event_ID', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        1632,
+        368
+      ],
+      "id": "e98b3268-b891-4c99-8bf4-2117703aaa82",
+      "name": "cancelar_cita",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "DV7phAFMcYtvhaXI",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Usa esta herramienta si el usuario quiere saber cuando tiene una cita",
+        "operation": "getAll",
+        "calendar": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "limit": 10,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        1760,
+        368
+      ],
+      "id": "25f90d9d-3171-4f1a-8cd9-ac6470fef76e",
+      "name": "consultar_citas",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "DV7phAFMcYtvhaXI",
+          "name": "Google Calendar account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "extraccion de mensaje",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "final_message_text",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File": {
+      "main": [
+        [
+          {
+            "node": "Transcribe a recording",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transcribe a recording": {
+      "main": [
+        [
+          {
+            "node": "final_message_voice",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "extraccion de mensaje": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "final_message_text": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "final_message_voice": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "agendar_cita": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "reprogramar_cita": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "cancelar_cita": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "consultar_citas": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Caracas",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "77452bca-2ef1-45c1-bb47-a67b774a24d6",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "4dc2fb8be4a5fec6cb374ed79837e7d3cc3fd3a7122e0de53c5db2dbb59b6fa7"
+  },
+  "id": "yxCuTBMBAXvldF48",
+  "tags": []
+}
