@@ -4,8 +4,6 @@ Este proyecto despliega un entorno automatizado que conecta **Evolution API** (u
 
 Es una solución poderosa y auto-hospedada para convertir mensajes de WhatsApp (texto y audio) en eventos de calendario de forma automática, ideal para agendar citas, recordatorios o tareas directamente desde tus conversaciones.
 
-![Diagrama del flujo de automatización](https://i.imgur.com/example.png)  <!-- Reemplaza esto con una URL a tu propio diagrama o imagen -->
-
 ---
 
 ## ✨ Características Principales
@@ -67,45 +65,39 @@ Es una solución poderosa y auto-hospedada para convertir mensajes de WhatsApp (
 
 El corazón de este proyecto es el flujo de n8n. A continuación se detalla la función de cada nodo clave.
 
-![Imagen del Workflow en n8n](URL_A_LA_IMAGEN_DE_TU_WORKFLOW) <!-- Reemplaza esto por una captura de tu workflow -->
+![Imagen del Workflow en n8n](Flujo.png)
 
 ### 1. **Webhook**
--   **Propósito:** Es el punto de entrada. Recibe los datos enviados por Evolution API cada vez que llega un mensaje de WhatsApp.
--   **Configuración:** La `Test URL` se usa para pruebas, pero la `Production URL` es la que debes pegar en la configuración de webhooks de Evolution API.
+-   **Propósito:** Es el punto de entrada. Recibe los datos enviados por Evolution API.
+-   **Configuración:** La `Production URL` es la que debes pegar en la configuración de webhooks de Evolution API.
 
 ### 2. **Bifurcación (Nodo `If`)**
--   **Propósito:** Revisa el mensaje entrante para determinar si contiene texto o una nota de voz (`voice_message`).
--   **Lógica:**
-    -   Si es **texto**, sigue la rama superior.
-    -   Si es **audio**, sigue la rama inferior.
+-   **Propósito:** Revisa si el mensaje entrante contiene texto o una nota de voz (`voice_message`) y dirige el flujo.
 
-### 3. **Ruta de Audio**
--   **`Convert to File`:** Convierte la cadena de texto `Base64` del audio a un archivo binario. La configuración clave es el `MIME Type`, que debe ser `audio/ogg` para los audios de WhatsApp.
--   **`Transcribe a recording`:** (No mostrado en detalle) Este nodo toma el archivo de audio y lo convierte en texto. Aquí es donde se usaría un modelo de transcripción, como el propio de Gemini.
--   **`final_message_voice`:** Un nodo `Set` que formatea el texto transcrito para pasarlo al agente de IA.
+### 3. **Ruta de Audio y Texto**
+-   Si es audio, se convierte el `Base64` a un archivo `audio/ogg`, se transcribe a texto y se prepara para el agente.
+-   Si es texto, se prepara directamente para el agente.
 
-### 4. **Ruta de Texto**
--   **`final_message_text`:** Un nodo `Set` que simplemente prepara el texto original del mensaje para el agente de IA.
-
-### 5. **🤖 AI Agent (El Cerebro)**
+### 4. **🤖 AI Agent (El Cerebro)**
 Este es el nodo central que orquesta todo.
 
 -   **Chat Model (`Google Gemini Chat Model`):**
     -   **Propósito:** Es el modelo de lenguaje que entiende las peticiones del usuario.
-    -   **Credenciales:** Para configurar la credencial, sigue los pasos de la sección **"Integración con IA"** más abajo para obtener tu clave API de Gemini.
+    -   **Credenciales:** Sigue los pasos de la sección **"Integración con IA"** para obtener tu clave API de Gemini.
     -   **Modelo:** Se recomienda usar `gemini-1.5-pro` o superior para poder analizar audios.
 
 -   **Chat Memory (`Postgres Chat Memory`):**
-    -   **Propósito:** Permite al agente recordar el contexto de la conversación (los últimos 10 mensajes, según la configuración). Esto es crucial para conversaciones fluidas.
-    -   **Credenciales:** Utiliza las credenciales de la base de datos PostgreSQL. Los valores (`usuario`, `contraseña`, `host`) deben coincidir con los definidos en tu archivo `docker-compose.yml` y `.env`. El `host` debe ser el nombre del servicio de Docker (ej. `postgres`).
-    -   **Session ID:** Se usa para mantener conversaciones separadas por cada usuario de WhatsApp.
+    -   **Propósito:** Permite al agente recordar el contexto de la conversación (los últimos 10 mensajes).
+    -   **Credenciales:**
+        -   **¡IMPORTANTE!** Para crear el usuario y la base de datos que n8n necesita para esta credencial, **abre y ejecuta los comandos que se encuentran en el archivo `evolution_postgres.txt`** incluido en el repositorio. Este archivo te guiará para conectarte al contenedor de la base de datos y configurar el usuario correctamente.
+        -   Una vez creado, usa los valores (`usuario`, `contraseña`, `host`, `base de datos`) que definiste. El `host` debe ser el nombre del servicio de Docker (ej. `postgres`).
 
 -   **Herramientas (Tools - Nodos de Google Calendar):**
-    Son las acciones que el agente puede decidir ejecutar. Cada herramienta tiene una descripción en lenguaje natural que ayuda a la IA a decidir cuál usar.
-    -   `agendar_cita`: **Operación `Create`**. Se activa cuando el usuario quiere crear un nuevo evento. La IA extrae la fecha, hora y descripción del mensaje.
-    -   `reprogramar_cita`: **Operación `Update`**. Se usa para mover una cita existente a otra fecha u hora.
-    -   `cancelar_cita`: **Operación `Delete`**. Se activa para eliminar un evento del calendario.
-    -   `consultar_citas`: **Operación `Get Many`**. Permite al usuario preguntar por sus próximas citas.
+    Son las acciones que el agente puede ejecutar. Cada herramienta tiene una descripción en lenguaje natural que ayuda a la IA a decidir cuál usar.
+    -   `agendar_cita`: Crea un nuevo evento.
+    -   `reprogramar_cita`: Actualiza un evento existente.
+    -   `cancelar_cita`: Elimina un evento.
+    -   `consultar_citas`: Busca y devuelve eventos futuros.
 
 ---
 
@@ -113,7 +105,7 @@ Este es el nodo central que orquesta todo.
 
 Para que el bot funcione, necesitas una API de Inteligencia Artificial. **Se recomienda encarecidamente el uso de Google Gemini**.
 
--   **✅ Nivel Gratuito Generoso:** Ofrece un amplio límite de uso sin costo, ideal para este proyecto.
+-   **✅ Nivel Gratuito Generoso:** Ofrece un amplio límite de uso sin costo.
 -   **🔊 Capacidades Multimodales:** Las versiones más recientes pueden procesar tanto texto como audio.
 
 ### Puntos Clave:
