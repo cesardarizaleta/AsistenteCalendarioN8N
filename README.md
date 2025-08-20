@@ -4,8 +4,6 @@ Este proyecto despliega un entorno automatizado que conecta **Evolution API** (u
 
 Es una solución poderosa y auto-hospedada para convertir mensajes de WhatsApp en eventos de calendario de forma automática, ideal para agendar citas, recordatorios o tareas directamente desde tus conversaciones.
 
-![Diagrama del flujo de automatización](**https://imgur.com/a/dS6d7dU**)  <!-- Reemplaza esto con una URL a tu propio diagrama o imagen -->
-
 ---
 
 ## ✨ Características Principales
