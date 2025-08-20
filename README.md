@@ -24,6 +24,7 @@ Es una solución poderosa y auto-hospedada para convertir mensajes de WhatsApp (
 
 -   [**Docker**](https://docs.docker.com/get-docker/)
 -   [**Docker Compose**](https://docs.docker.com/compose/install/)
+-   [**Ngrok**](https://ngrok.com/download) (Recomendado para entornos locales)
 
 ---
 
@@ -43,9 +44,18 @@ Es una solución poderosa y auto-hospedada para convertir mensajes de WhatsApp (
     docker compose up -d
     ```
 
-4.  **Accede a las aplicaciones:**
-    -   **n8n:** [http://localhost:5678](http://localhost:5678)
-    -   **Evolution API:** [http://localhost:8080](http://localhost:8080)
+4.  **Expón tu n8n a Internet con ngrok (Muy recomendado):**
+    Para que servicios como Google y Evolution API puedan enviar datos a tu n8n local, necesitas una URL pública. `ngrok` es la herramienta perfecta para esto.
+    
+    Abre una nueva terminal y ejecuta:
+    ```bash
+    ngrok http 5678
+    ```
+    `ngrok` te dará una URL pública (ej. `https://xxxx-xxxx.ngrok-free.app`). **Usa esta URL pública en lugar de `localhost:5678`** para los siguientes pasos.
+
+5.  **Accede a las aplicaciones:**
+    -   **n8n:** `http://localhost:5678` (o tu URL de ngrok)
+    -   **Evolution API:** `http://localhost:8080`
 
 ---
 
@@ -53,11 +63,12 @@ Es una solución poderosa y auto-hospedada para convertir mensajes de WhatsApp (
 
 1.  **En n8n:**
     -   Importa el flujo de trabajo (`workflow.json`) proporcionado en este repositorio.
-    -   Configura las credenciales necesarias (ver detalles en la sección del flujo de trabajo).
+    -   Configura las credenciales necesarias (Google, Gemini, PostgreSQL). **Importante:** Cuando configures las credenciales de Google OAuth, asegúrate de usar tu **URL de ngrok** en la lista de URIs de redireccionamiento autorizadas en la Consola de Google Cloud.
 
 2.  **En Evolution API:**
     -   Crea tu instancia de WhatsApp.
-    -   Copia la URL del **Webhook de Producción** del nodo `Webhook` en n8n y configúrala en tu instancia de Evolution API para que notifique a n8n cada vez que llegue un mensaje.
+    -   Copia la URL del **Webhook de Producción** del nodo `Webhook` en n8n. Asegúrate de que sea la **URL proporcionada por ngrok**.
+    -   Configura esa URL en tu instancia de Evolution API para que notifique a n8n cada vez que llegue un mensaje.
 
 ---
 
@@ -67,18 +78,18 @@ El corazón de este proyecto es el flujo de n8n. A continuación se detalla la f
 
 ![Imagen del Workflow en n8n](Flujo.png)
 
-### 1. **Webhook**
+### 1. Webhook
 -   **Propósito:** Es el punto de entrada. Recibe los datos enviados por Evolution API.
--   **Configuración:** La `Production URL` es la que debes pegar en la configuración de webhooks de Evolution API.
+-   **Configuración:** La `Production URL` es la que debes pegar en la configuración de webhooks de Evolution API (preferiblemente la de ngrok).
 
-### 2. **Bifurcación (Nodo `If`)**
+### 2. Bifurcación (Nodo `If`)
 -   **Propósito:** Revisa si el mensaje entrante contiene texto o una nota de voz (`voice_message`) y dirige el flujo.
 
-### 3. **Ruta de Audio y Texto**
+### 3. Ruta de Audio y Texto
 -   Si es audio, se convierte el `Base64` a un archivo `audio/ogg`, se transcribe a texto y se prepara para el agente.
 -   Si es texto, se prepara directamente para el agente.
 
-### 4. **🤖 AI Agent (El Cerebro)**
+### 4. 🤖 AI Agent (El Cerebro)
 Este es el nodo central que orquesta todo.
 
 -   **Chat Model (`Google Gemini Chat Model`):**
@@ -125,5 +136,3 @@ Para que el bot funcione, necesitas una API de Inteligencia Artificial. **Se rec
     ```bash
     docker compose down -v
     ```
-
----
