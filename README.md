@@ -18,7 +18,7 @@ Este proyecto contiene un entorno completo con Docker Compose para levantar **ev
 
 3. **Levanta los servicios:**
    ```bash
-   docker-compose up -d
+   docker compose up -d
    ```
 
 4. **Accede a las aplicaciones:**
@@ -31,7 +31,7 @@ Este proyecto contiene un entorno completo con Docker Compose para levantar **ev
 - Es necesario tener **Docker** y **Docker Compose** instalados.
 - Para detener los servicios:
   ```bash
-  docker-compose down
+  docker compose down
   ```
 
 ---
